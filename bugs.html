@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>BUGS!</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="../node_modules/font-awesome/css/font-awesome.css">-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+    <style>
+        #bugGrid {
+            width: 500px;
+            height: 500px;
+            cursor: crosshair;
+            position: relative;
+        }
+
+        #bugGrid .row {
+
+            height: 40px;
+        }
+
+        #bugGrid .row div {
+            border: rgb(250, 250, 250) 1px solid;
+            height: 100%;
+            justify-content: center;
+        }
+
+
+        .crawly {
+            text-shadow: 1px;
+            font-size: xx-large;
+            color: rgb(0, 66, 0);
+        }
+
+        .fa {
+            font-size: xx-large !important;
+        }
+
+        .modal-footer {
+            justify-content: center;
+        }
+
+        .modal-header {
+            justify-content: center;
+        }
+
+        .col-1 {
+            display: grid;
+            padding: 0 !important;
+            text-align: center;
+            justify-content: center !important;
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-1"></div>
+            <div class="col-3">
+                <h1>BUGS!</h1>
+            </div>
+            <div class="col-3">
+                <h3>Score: <span class="badge badge-success score">0</span></h3>
+            </div>
+            <div class="col-3">
+                <h3>Timer: <span class="badge badge-success timer">0</span></h3>
+            </div>
+            <div class="col-2"></div>
+        </div>
+        <div class="row"></div>
+        <div id="bugGrid" class="container bugGrid">
+            <!--JavaScript will populate grid here-->
+        </div>
+    </div>
+
+    <!-- Welcome Modal - lifted from https://getbootstrap.com/docs/4.0/components/modal/-->
+    <div class="modal fade" id="welcomeModalCenter" tabindex="-1" role="dialog"
+        aria-labelledby="welcomeModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">WELCOME TO BUGS!</h5>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>A Herbivorous Ape joint.</p>
+                    <p>The goal is to squish as many bugs as you can before time runs out. The timer
+                        is set to <span class="badge badge-success timeLimit"></span> seconds. There is currently no
+                        difficulty setting.</p>
+                    <p>Press Start / Reset to begin after closing this modal.</p>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info btn-block" data-dismiss="modal" id="startReset">Close
+                        Welcome</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal - lifted from https://getbootstrap.com/docs/4.0/components/modal/-->
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">GAME OVER</h5>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>You squished <span class="badge badge-success score">0</span> bugs!</p>
+                    <p>Close this modal to squish any remaining bugs for no points,
+                        or squish the 'Start / Reset' button to play again.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+    <script src="https://use.fontawesome.com/34e83eecfa.js"></script>
+    <script>
+        $(document).ready(function () {
+            //set initial variables 
+            let xCord = randomNum(1, 12);
+            let yCord = randomNum(1, 12);
+            let score = 0;
+            let timeHeld = 0;
+            let timeLimit = 30;
+            let bugsASecond = 1;
+            let timer;
+            let pauseVar = "pause";
+            createGrid();
+
+            //create the grid - need to add CSS for consistent height/width
+            function createGrid() {
+                for (let i = 1; i <= 12; i++) {
+                    $("#bugGrid").append('<div class="row"></div>');
+                    for (let j = 1; j <= 12; j++) {
+                        $("#bugGrid .row:nth-child(" + i + ")").append('<div class="col-1"><span class="crawly animated fa"></span></div>');
+                    };
+                    if (i === 12) {
+                        $("#bugGrid").append('<div class="row">\
+                            <div class="col-6"><input type="button" value="Start / Reset" class="btn btn-success btn-block" id="startReset"></div>\
+                            <div class="col-6"><input type="button" value="Pause / Unpause" class="btn btn-info btn-block" id="pause"></div>\
+                            </div>');
+                    };
+                };
+            };
+
+            document.getElementById("startReset").onclick =
+                function startReset() {
+                    resetGrid();
+                    setCords();
+                    $(".score").html(0);
+                    $(".timer").html(0);
+                    score = 0;
+                    timeHeld = 0;
+                    clearInterval(timer);
+                    timer = setInterval(masterTime, 1000);
+                    pauseVar = "unpaused";
+                };
+
+            document.getElementById("pause").onclick =
+                function pause() {
+                    if (pauseVar == "unpaused") {
+                        clearInterval(timer);
+                        pauseVar = "paused";
+                    }
+                    else if (pauseVar == "paused") {
+                        timer = setInterval(masterTime, 1000);
+                        pauseVar = "unpaused";
+                    };
+                };
+
+            $(".timeLimit").html(timeLimit);
+            $("#welcomeModalCenter").modal();
+
+            //mouseover actions
+            let overActions = ["bounce", "flash", "pulse", "rubberBand", "shakeX", "shakeY",
+                "headShake", "swing", "tada", "wobble", "jello", "heartBeat"];
+            let overAction = overActions[randomNum(0, overActions.length - 1)];
+
+            //bug entrance actions
+            let entranceActions = ["bounceIn", "fadeIn", "fadeInDown", "fadeInLeft", "fadeInRight",
+                "fadeInUp", "flip", "flipInX", "flipInY", "rotateIn", "rollIn", "slideInDown", "slideInLeft",
+                "slideInRight", "slideInUp"];
+            let entranceAction = entranceActions[randomNum(0, entranceActions.length - 1)];
+
+            //bug exit actions
+            let exitActions = ["bounceOut", "bounceOutDown", "bounceOutLeft", "bounceOutRight",
+                "bounceOutUp"];
+            let exitAction = exitActions[randomNum(0, exitActions.length - 1)];
+
+            function setCords() {
+                xCord = randomNum(1, 12);
+                yCord = randomNum(1, 12);
+            };
+
+            function setActions() {
+                overAction = overActions[randomNum(0, overActions.length - 1)];
+                entranceAction = entranceActions[randomNum(0, entranceActions.length - 1)];
+                exitAction = exitActions[randomNum(0, exitActions.length - 1)];
+            };
+
+            //adds bug to a random square
+            //$("#bugGrid .row:nth-child("+xCord+") div:nth-child("+yCord+") span").addClass("fa-bug")
+
+            //Bug interactions
+            $(".crawly").hover(function () { $(this).addClass(overAction + " infinite") },
+                function () { $(this).removeClass(overAction + " infinite") });
+
+            $(".crawly").click(function () {
+                if (pauseVar === "unpaused") {
+
+                    if (timeHeld <= timeLimit && $(this).hasClass("deadBug") === false) { score++ }
+
+                    $(this).removeClass("bounce fa-bug infinite")
+                        .addClass("jello fa-certificate text-danger deadBug " + timeHeld);
+
+                    $(".score").html(score);
+                };
+            });
+
+            //timer to track flow / level
+
+            function masterTime() {
+                if (timeHeld === timeLimit) {
+                    console.log("game over");
+                    gameOver();
+                };
+                if (timeHeld <= timeLimit) {
+                    $(".timer").html(timeHeld);
+                    timeHeld++;
+                };
+                if (timeHeld % bugsASecond == 0 && timeHeld <= timeLimit) {
+                    //remove bug (fade if deadBug)
+                    bugExit();
+                    setCords();
+                    setActions();
+                    newBug();
+                };
+
+            }; //end master time
+
+            function newBug() {
+                $("#bugGrid .row:nth-child(" + xCord + ") div:nth-child(" + yCord + ") span").addClass("fa-bug " + entranceAction);
+                setTimeout(function () {
+                    $("#bugGrid .row:nth-child(" + xCord + ") div:nth-child(" + yCord + ") span")
+                    .removeClass(entranceAction);
+                }, 600);
+            };
+
+            function bugExit() {
+                $(".deadBug").addClass("fadeOut")
+                //add 2 second delay
+                //reset classes to normal (crawly animated fa)
+                setTimeout(function () { $(".deadBug").attr("class", "crawly animated fa") }, 1000);
+            };
+
+
+            function resetGrid() {
+                $(".crawly").attr("class", "crawly animated fa");
+            };
+
+            function gameOver() {
+                $("#exampleModalCenter").modal();
+            };
+
+            //Random number function
+            function randomNum(min, max) {
+                return Math.floor(Math.random() * (max - min)) + min;
+            };
+
+
+            //Ideas for enhancement
+            //randomize splat
+            //create bug objects (good bugs you're not supposed to splat - more difficult bugs)
+            //level difficulty (more difficult bugs, shorter stop time)
+
+        }); //end document.ready function
+
+
+    </script>
+
+</body>
+
+</html>
